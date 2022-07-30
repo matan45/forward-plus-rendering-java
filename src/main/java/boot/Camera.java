@@ -35,11 +35,11 @@ public class Camera {
     private final float mouseSensitivity;
     public float zoom;
 
-    public Camera(Vector3f position, Vector3f up, float yaw, float pitch) {
+    public Camera(Vector3f position, Vector3f up) {
         this.position = position;
         this.up = up;
-        this.yaw = yaw;
-        this.pitch = pitch;
+        this.yaw = YAW;
+        this.pitch = PITCH;
         front = new Vector3f(0.0f, 0.0f, -1.0f);
         right = new Vector3f();
         worldUp = new Vector3f();
@@ -51,7 +51,7 @@ public class Camera {
 
     // Returns the view matrix calculated using Eular Angles and the LookAt Matrix
     public Matrix4f getViewMatrix() {
-        return null;
+        return new Matrix4f().lookAt(position, position.add(front), up);
     }
 
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
