@@ -9,7 +9,7 @@ import static org.lwjgl.opengl.GL32.GL_GEOMETRY_SHADER;
 import static org.lwjgl.opengl.GL43.GL_COMPUTE_SHADER;
 
 public class Shader {
-    private int program;
+    public int program;
 
     public Shader(String computePath) {
         String computeCode = getShaderCode(computePath);

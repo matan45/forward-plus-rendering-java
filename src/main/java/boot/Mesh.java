@@ -1,5 +1,6 @@
 package boot;
 
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.assimp.AIString;
 import org.lwjgl.system.MemoryUtil;
@@ -8,23 +9,32 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class Mesh {
-    private static class Vertex {
+
+    public static class Vertex {
         Vector3f position;
         Vector3f normal;
-        Vector3f textureCoordinates;
+        Vector2f textureCoordinates;
         Vector3f tangent;
         Vector3f bitangent;
+
+        public Vertex() {
+            position = new Vector3f();
+            normal = new Vector3f();
+            textureCoordinates = new Vector2f();
+            tangent = new Vector3f();
+            bitangent = new Vector3f();
+        }
     }
 
-    private static class Texture {
+    public static class Texture {
         int id;
         String type;
         AIString path;
@@ -41,15 +51,54 @@ public class Mesh {
         this.vertices = vertices;
         this.indices = indices;
         this.textures = textures;
-        SetupMesh();
+        setupMesh();
     }
 
-    private void Draw(Shader shader) {
+    public void draw(Shader shader) {
+        // Bind appropriate textures
+        int diffuseNumber = 1;
+        int specularNumber = 1;
+        int normalNumber = 1;
+        int heightNumber = 1;
 
+        for (int i = 0; i < textures.size(); i++) {
+            // Activate proper texture unit and retrieve texture number
+            glActiveTexture(GL_TEXTURE0 + i);
+            int stream = 0;
+            int number;
+            String name = textures.get(i).type;
+
+            // Transfer texture data to stream
+            if (Objects.equals(name, "texture_diffuse")) {
+                stream += diffuseNumber++;
+            } else if (Objects.equals(name, "texture_specular")) {
+                stream += specularNumber++;
+            } else if (Objects.equals(name, "texture_normal")) {
+                stream += normalNumber++;
+            } else if (Objects.equals(name, "texture_height")) {
+                stream += heightNumber++;
+            }
+            number = stream;
+
+            // Set sampler to the correct texture unit and bind the texture
+            glUniform1i(glGetUniformLocation(shader.program, (name + number)), i);
+            glBindTexture(GL_TEXTURE_2D, textures.get(i).id);
+        }
+
+        // Draw mesh
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Reset to defaults
+        for (int i = 0; i < textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 
-    private void SetupMesh() {
-// Create buffers and arrays
+    private void setupMesh() {
+        // Create buffers and arrays
         VAO = glGenVertexArrays();
         VBO = glGenBuffers();
         EBO = glGenBuffers();
@@ -79,7 +128,7 @@ public class Mesh {
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 3);
 
-        // Texture Coords
+        // Texture Cords
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 2);
 
@@ -87,7 +136,7 @@ public class Mesh {
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 3, GL_FLOAT, false, 0, 3);
 
-        // Bitangent
+        // Bi tangent
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 3, GL_FLOAT, false, 0, 4);
 
