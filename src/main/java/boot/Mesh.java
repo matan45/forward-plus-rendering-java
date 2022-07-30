@@ -37,7 +37,7 @@ public class Mesh {
     public static class Texture {
         int id;
         String type;
-        AIString path;
+        String path;
     }
 
     List<Vertex> vertices;
